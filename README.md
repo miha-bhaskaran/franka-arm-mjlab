@@ -8,7 +8,7 @@ The goal is to establish a reliable nominal controller for investigating residua
 
 ## Demo
 
-![Franka Panda Insertion Demo](teaser.gif)
+![Franka Panda Insertion Demo]([Screencast from 10-15-2026 02:04:29 PM.webm](https://github.gatech.edu/user-attachments/assets/2063ea85-9fa5-4950-a30b-1fa37f5119bc))
 
 ## Overview
 
