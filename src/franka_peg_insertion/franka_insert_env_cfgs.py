@@ -7,8 +7,7 @@ from mjlab.envs.mdp.actions import JointEffortActionCfg, JointPositionActionCfg
 from mjlab.managers.observation_manager import ObservationTermCfg
 from mjlab.tasks.manipulation.lift_cube_env_cfg import make_lift_cube_env_cfg
 from mjlab.tasks.velocity import mdp
-
-from anymal_c_velocity.franka_emika_panda.franka_constants import get_franka_robot_cfg
+from franka_peg_insertion.franka_emika_panda.franka_constants import get_franka_robot_cfg
 
 
 def get_fixture_spec() -> mujoco.MjSpec:

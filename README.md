@@ -1,4 +1,4 @@
-# mjlab example: anymal_c_velocity
+# Franka Panda Peg-in-Hole Insertion in MJLab
 
 ![ANYmal C locomotion](teaser.gif)
 

@@ -14,8 +14,8 @@ from mjlab.envs import ManagerBasedRlEnv
 from mjlab.tasks.registry import load_env_cfg
 from mjlab.viewer import NativeMujocoViewer
 from mjlab.rl import RslRlVecEnvWrapper
-from anymal_c_velocity.franka_emika_panda.franka_constants import get_franka_robot_cfg
-from anymal_c_velocity.franka_insert_env_cfgs import get_fixture_spec
+from franka_peg_insertion.franka_emika_panda.franka_constants import get_franka_robot_cfg
+from franka_peg_insertion.franka_insert_env_cfgs import get_fixture_spec
 
 
 def solve_ik(model, data, site_id, target_position, target_rotation,
