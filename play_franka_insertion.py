@@ -183,10 +183,27 @@ class BiasCompensatedPD:
         bias = live_qfrc_bias[:, self.dof_ids]
         torque = self.kp * (desired - q) - self.kd * qd + bias
         return torch.maximum(torch.minimum(torque, self.limits), -self.limits)
+def check_insertion_success(sim, site_id):
+    """Check whether the peg tip is aligned and inserted."""
 
+    # Read live site positions from MuJoCo Warp.
+    peg_pos = sim.data.site_xpos[:, site_id, :]
+
+    hole_x = 0.5595
+    hole_y = 0.0
+
+    # Horizontal alignment.
+    x_aligned = torch.abs(peg_pos[:, 0] - hole_x) < 0.001
+    y_aligned = torch.abs(peg_pos[:, 1] - hole_y) < 0.001
+
+    # Require the tip to be at least 10 mm below the fixture top.
+    inserted = peg_pos[:, 2] <= 0.02
+
+    return x_aligned & y_aligned & inserted
 
 class InsertionPolicy:
-    def __init__(self, env, trajectory, controller, correction=True):
+    def __init__(self, env, trajectory, controller, reference_model, correction=True):
+    
         self.env = env
         self.controller = controller
         self.home, self.approach, self.corrected, self.waypoints, self.nominal_waypoints = trajectory
@@ -194,6 +211,15 @@ class InsertionPolicy:
         self.calls = 0
         self.step_dt = 0.005  # Match the existing insertion trajectory/control cadence.
         self.action_shape = env.unwrapped.action_space.shape
+        self.success_reported = False
+        self.peg_tip_id = mujoco.mj_name2id(
+            reference_model,
+            mujoco.mjtObj.mjOBJ_SITE,
+            "peg_tip",
+        )
+
+        if self.peg_tip_id < 0:
+            raise RuntimeError("peg_tip site not found")
         if self.action_shape[-1] != 8:
             raise ValueError(f"Expected 8 actions (7 torques + gripper), got {self.action_shape}")
 
@@ -279,6 +305,19 @@ class InsertionPolicy:
                 effort[0].detach().cpu().numpy().round(2))
 
             print("------------------------")
+        # Check insertion success.
+        if not self.success_reported and t >= 10.0:
+
+            
+            success = check_insertion_success(sim, self.peg_tip_id)
+
+            if success.any().item():
+                print("\n" + "=" * 40)
+                print("PEG INSERTION SUCCESS!")
+                print(f"Time: {t:.2f} seconds")
+                print("=" * 40 + "\n")
+
+                self.success_reported = True
         return action
 
 
@@ -309,7 +348,12 @@ def main():
 
     try:
         controller = BiasCompensatedPD(reference_model, device=torch.device(base_env.device))
-        policy = InsertionPolicy(env, trajectory, controller, correction=not args.no_correction)
+        policy = InsertionPolicy(
+        env,
+        trajectory,
+        controller,
+        reference_model,
+        correction=not args.no_correction,)
         NativeMujocoViewer(env, policy).run()
     finally:
         env.close()
